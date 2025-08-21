@@ -1,56 +1,78 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-export default function SignupPage() {
+function SignupPage({ selectedPlan, setUserData }) {
   const navigate = useNavigate();
-  const plan = new URLSearchParams(useLocation().search).get("plan");
-
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [pass, setPass] = useState("");
-  const [confirm, setConfirm] = useState("");
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirm: "",
+    terms: false,
+  });
   const [error, setError] = useState("");
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm({ ...form, [name]: type === "checkbox" ? checked : value });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!name || !email.includes("@") || pass.length < 6 || pass !== confirm) {
-      return setError("Please check your inputs");
-    }
-    navigate("/confirmation", { state: { name, email, plan } });
+
+    if (!form.name) return setError("Name is required");
+    if (!form.email.includes("@")) return setError("Enter a valid email");
+    if (form.password.length < 6) return setError("Password must be at least 6 characters");
+    if (form.password !== form.confirm) return setError("Passwords do not match");
+    if (!form.terms) return setError("You must accept the terms");
+
+    setUserData({ name: form.name, email: form.email });
+    navigate("/confirmation");
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="max-w-xs mx-auto p-4 flex flex-col gap-3 border rounded shadow-sm mt-6"
-    >
-      <h2 className="text-xl font-bold">Signup for {plan}</h2>
-      {error && <p className="text-red-500 text-sm">{error}</p>}
-      <input
-        placeholder="Full Name"
-        className="border p-2 rounded"
-        onChange={(e) => setName(e.target.value)}
-      />
-      <input
-        placeholder="Email"
-        className="border p-2 rounded"
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        className="border p-2 rounded"
-        onChange={(e) => setPass(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="Confirm Password"
-        className="border p-2 rounded"
-        onChange={(e) => setConfirm(e.target.value)}
-      />
-      <button className="bg-green-500 text-white p-2 rounded hover:bg-green-600">
-        Signup
-      </button>
-    </form>
+    <div className="p-4">
+      <h1 className="text-xl font-bold mb-4">
+        Signup for {selectedPlan?.name || "a Plan"}
+      </h1>
+      {error && <p className="text-red-500">{error}</p>}
+      <form className="flex flex-col gap-2 max-w-sm" onSubmit={handleSubmit}>
+        <input
+          name="name"
+          placeholder="Full Name"
+          onChange={handleChange}
+          className="border p-2"
+        />
+        <input
+          name="email"
+          type="email"
+          placeholder="Email"
+          onChange={handleChange}
+          className="border p-2"
+        />
+        <input
+          name="password"
+          type="password"
+          placeholder="Password"
+          onChange={handleChange}
+          className="border p-2"
+        />
+        <input
+          name="confirm"
+          type="password"
+          placeholder="Confirm Password"
+          onChange={handleChange}
+          className="border p-2"
+        />
+        <label className="text-sm">
+          <input type="checkbox" name="terms" onChange={handleChange} /> Accept Terms
+        </label>
+        <button className="bg-green-500 text-white px-4 py-2 rounded">
+          Signup
+        </button>
+      </form>
+    </div>
   );
 }
+
+export default SignupPage;
